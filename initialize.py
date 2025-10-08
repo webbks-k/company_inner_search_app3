@@ -213,9 +213,20 @@ def file_load(path, docs_all):
     # ファイル名（拡張子を含む）を取得
     file_name = os.path.basename(path)
 
-    # 想定していたファイル形式の場合のみ読み込む
-    if file_extension in ct.SUPPORTED_EXTENSIONS:
-        # ファイルの拡張子に合ったdata loaderを使ってデータ読み込み
+    # CSVファイルの場合、各行を統合して1つのドキュメントにする
+    if file_extension == ".csv":
+        loader = ct.SUPPORTED_EXTENSIONS[file_extension](path)
+        docs = loader.load()
+
+        # 各行を統合して1つのドキュメントにする
+        combined_content = "\n".join([doc.page_content for doc in docs])
+        combined_doc = {
+            "page_content": combined_content,
+            "metadata": {"source": path}
+        }
+        docs_all.append(combined_doc)
+    elif file_extension in ct.SUPPORTED_EXTENSIONS:
+        # その他のファイル形式の場合、通常通り読み込み
         loader = ct.SUPPORTED_EXTENSIONS[file_extension](path)
         docs = loader.load()
         docs_all.extend(docs)
